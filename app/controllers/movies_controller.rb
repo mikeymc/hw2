@@ -5,7 +5,38 @@ class MoviesController < ApplicationController
     @movie = Movie.find(id) # look up movie by unique ID
     # will render app/views/movies/show.<extension> by default
   end
-  
+
+  def index
+    @all_ratings = Movie.all_ratings
+    if !params.has_key? :ratings and !params.has_key? :sort_by
+        if !session.has_key? :ratings
+            session[:ratings] = @all_ratings
+        end
+        if !session.has_key? :sort_by
+            session[:sort_by] = 'title'
+        end
+        flash.keep
+        redirect_to movies_path :ratings => session[:ratings], :sort_by => session[:sort_by]
+    else
+        if params.has_key? :ratings and !params.has_key? :sort_by
+            if !params[:ratings].empty?
+                session[:ratings] = params[:ratings].keys
+            end
+            redirect_to movies_path :ratings => session[:ratings], :sort_by => session[:sort_by]
+        end
+        if params.has_key? :sort_by and !params.has_key? :ratings
+            session[:sort_by] = params[:sort_by]
+            redirect_to movies_path :ratings => session[:ratings], :sort_by => session[:sort_by]
+        end
+        
+        @checked = session[:ratings]
+        @movies = Movie.return_with_conditions(session)
+        debugger
+    end
+  end
+
+
+=begin
   def index
     @all_ratings = Movie.all_ratings
     @checked = @all_ratings
@@ -22,23 +53,6 @@ class MoviesController < ApplicationController
         @checked = session[:ratings]
     end
     @movies = Movie.return_with_conditions(session)
-  end
-  
-=begin  
-  def index
-    @sort_by_title, @sort_by_release_date = false, false
-    @all_ratings = Movie.all_ratings
-    if params.has_key? :sort_by
-      if params[:sort_by] == 'title'
-        @sort_by_title = true
-        @movies = Movie.sort_by_title
-      elsif params[:sort_by] == 'release_date'
-        @sort_by_release_date = true
-        @movies = Movie.sort_by_release_date
-      end
-    else
-      @movies = Movie.all
-    end
   end
 =end
 
